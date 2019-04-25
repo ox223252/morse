@@ -323,8 +323,6 @@ void send ( char * msg, uint8_t response )
 
 int main ( void )
 {
-	initMorseTable ( );
-
 	send ( "bonjour", 0 );
 
 	return ( 0 );
