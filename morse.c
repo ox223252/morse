@@ -4,6 +4,7 @@
 #include "morse.h"
 
 // https://fr.wikipedia.org/wiki/Code_Morse_international
+static uint8_t _morse_init = 0;
 static char *_morse_code[] = {
 	".-", // A
 	"-...", // B
@@ -64,6 +65,7 @@ static void initMorseTable ( void )
 			}
 		}
 	}
+	_morse_init = 1;
 }
 
 static char *_morse_prt = NULL;
@@ -141,6 +143,11 @@ uint32_t endMsgNoResponse ( void )
 
 uint32_t convertNextChar ( char * string )
 {
+	if ( !_morse_init )
+	{
+		initMorseTable ( );
+	}
+
 	if ( string )
 	{
 		_morse_prt = string;
@@ -262,70 +269,3 @@ uint32_t convertNextChar ( char * string )
 		}
 	}
 }
-
-#if 0
-
-#include <unistd.h>
-
-#define set() putchar('#')
-#define reset() putchar(' ')
-
-const uint32_t time=150000;
-
-void one ( uint32_t s )
-{
-	while ( s )
-	{
-		(s & 0x01)?set():reset();
-		fflush ( NULL );
-		s >>= 1;
-		usleep( time );
-	}
-}
-
-void send ( char * msg, uint8_t response )
-{
-	uint32_t symbol = 0;
-	one ( startMsg ( ) );
-	
-	usleep ( time * 7 );
-	printf ( "       " );
-	
-	one ( convertNextChar ( msg ) );
-
-	while ( symbol = convertNextChar ( NULL ), symbol )
-	{
-		if ( symbol == 0xffffffff )
-		{ // space between word is 7  blanc
-			usleep ( time * 7 );
-			printf ( "       " );
-		}
-		else
-		{ // space between letters in a word is 3  blanc
-			usleep ( time * 3 );
-			printf ( "   " );
-			one ( symbol );
-		}
-	}
-
-	usleep ( time * 7 );
-	printf ( "       " );
-
-	if ( response )
-	{
-		one ( endMsgWithResponse ( ) );
-	}
-	else
-	{
-		one ( endMsgNoResponse ( ) );
-	}
-}
-
-int main ( void )
-{
-	send ( "bonjour", 0 );
-
-	return ( 0 );
-}
-
-#endif
